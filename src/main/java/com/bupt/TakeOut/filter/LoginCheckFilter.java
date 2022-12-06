@@ -1,6 +1,7 @@
 package com.bupt.TakeOut.filter;
 
 import com.alibaba.fastjson.JSON;
+import com.bupt.TakeOut.common.BaseContext;
 import com.bupt.TakeOut.common.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
@@ -52,6 +53,13 @@ public class LoginCheckFilter implements Filter {//实现filter，编辑doFilter
             * 存入的也是id
              **/
             log.info("用户登录，id为：{}",request.getSession().getAttribute("employee"));
+
+            /*
+            * 用户登录后，获取通过ThreadLocal设置id
+            * */
+            Long empId = (Long) request.getSession().getAttribute("employee");
+            BaseContext.setCurrentId(empId);
+
             filterChain.doFilter(request, response);
             return;
         }

@@ -69,13 +69,13 @@ public class EmployeeController {
         //首先，初始密码设置为123456，再用md5加密
         employee.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
         //设置创建时间
-        employee.setCreateTime(LocalDateTime.now());
+        /*employee.setCreateTime(LocalDateTime.now());
         employee.setUpdateTime(LocalDateTime.now());
         //设置创建人
         //创建人id在数据库中的类型为bigInt，且employee中创建人传入参数类型为LONG，因此，此处设为Long
         Long empId = (Long) request.getSession().getAttribute("employee");
         employee.setCreateUser(empId);
-        employee.setUpdateUser(empId);
+        employee.setUpdateUser(empId);*/
         //最后调用employService继承的mybatisPlus的IService进行添加，连sql语句都不用写，通过调用方法实现类
         employeeService.save(employee);
         return R.success("员工添加成功");//返回的通用结果类是传入到前端代码作为参数，从而显示到页面上
@@ -101,6 +101,35 @@ public class EmployeeController {
         return R.success(pageInfo);
     }
 
+
+    @PutMapping
+    //启用禁用员工信息
+    public R<String> update(HttpServletRequest request,@RequestBody Employee employee){
+        log.info(employee.toString());
+
+        //1、获取Ajax请求的数据,从request中获取，得到当前登录的用户id
+        Long empId = (Long) request.getSession().getAttribute("employee");
+
+        /*employee.setUpdateUser(empId);
+        employee.setUpdateTime(LocalDateTime.now());*/
+        //2、对数据进行更新
+        //仍采用继承MP的方法
+        employeeService.updateById(employee);
+        //3、修改成功返回
+        return R.success("修改成功");
+    }
+
+    //根据id查询员工信息,从而
+    @GetMapping("/{id}")
+    public R<Employee> getById(@PathVariable String id){
+        log.info("根据id查询对象");
+        Employee emp = employeeService.getById(id);
+        if (emp == null) {
+            return R.error("未找到该员工信息");
+        }
+        //找到之后，保存该员工信息，点击保存按钮后，转到添加员工请求处（post），完成修改
+        return R.success(emp);
+    }
 
 
 }
