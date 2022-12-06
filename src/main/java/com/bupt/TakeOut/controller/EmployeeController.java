@@ -1,17 +1,18 @@
 package com.bupt.TakeOut.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bupt.TakeOut.common.R;
 import com.bupt.TakeOut.entity.Employee;
 import com.bupt.TakeOut.service.impl.EmployeeServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 
 @Slf4j//日志
 @RestController//@Controller+@ResponseBody，直接在页面返回数据
@@ -30,7 +31,7 @@ public class EmployeeController {
 
         //2、根据提交的用户名查询数据库
         LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();//包装器作用？？
-        //用法？？
+        //用法？？--
         queryWrapper.eq(Employee::getUsername,employee.getUsername());
         Employee emp = employeeService.getOne(queryWrapper);
 
@@ -49,11 +50,57 @@ public class EmployeeController {
         return R.success(emp);
     }
 
+    /*
+    * 员工退出功能
+    * */
     @RequestMapping("/logout")
     public R<String> logout(HttpServletRequest request){
         //清理session中保存的当前员工的登录id
         request.getSession().removeAttribute("employee");
         return R.success("退出成功");
     }
+
+    /*
+    * 增加员工功能
+    * */
+    @PostMapping//post方式提交
+    public R<String> save(HttpServletRequest request,@RequestBody Employee employee){//@RequestBody，获取页面请求的信息
+        //设置传入参数以外的内容，创建时间、创建人、密码等
+        //首先，初始密码设置为123456，再用md5加密
+        employee.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
+        //设置创建时间
+        employee.setCreateTime(LocalDateTime.now());
+        employee.setUpdateTime(LocalDateTime.now());
+        //设置创建人
+        //创建人id在数据库中的类型为bigInt，且employee中创建人传入参数类型为LONG，因此，此处设为Long
+        Long empId = (Long) request.getSession().getAttribute("employee");
+        employee.setCreateUser(empId);
+        employee.setUpdateUser(empId);
+        //最后调用employService继承的mybatisPlus的IService进行添加，连sql语句都不用写，通过调用方法实现类
+        employeeService.save(employee);
+        return R.success("员工添加成功");//返回的通用结果类是传入到前端代码作为参数，从而显示到页面上
+    }
+
+    //分页功能实现
+    @GetMapping("/page")
+    //根据前端代码的需要，确定R的模板类型
+    public R<Page> page(int page,int pageSize,String name){
+        log.info("page={},pageSize={},name={}",page,pageSize,name);
+        //有参构造，name为可有可无，因此使用有参构造
+        Page pageInfo = new Page(page, pageSize);
+        //启用MP中的wrapper----包装sql语句的功能的类
+        //创建条件构造器
+        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper();
+        //过滤条件：名称和搜索内容相似(name不为空则启用过滤
+        queryWrapper.like(!StringUtils.isEmpty(name),Employee::getName,name);
+        //过滤后进行排序，按照秀嘎时间排序
+        queryWrapper.orderByDesc(Employee::getUpdateTime);
+
+        //查询---service调用mapper操作数据库
+        employeeService.page(pageInfo);
+        return R.success(pageInfo);
+    }
+
+
 
 }
