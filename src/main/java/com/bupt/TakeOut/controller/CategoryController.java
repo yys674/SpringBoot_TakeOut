@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j//日志
 @RestController//返回响应体
 @RequestMapping("/category")
@@ -76,5 +78,20 @@ public class CategoryController {
         return R.success("分类修改成功！");
     }
 
+    //菜品添加中下拉框内容的实现
+    @GetMapping("/list")
+    public R<List<Category>> list(Category category){
 
+        //MP的条件构造器
+        LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
+
+        //添加元素的条件的设置
+        queryWrapper.eq(category.getType()!=null,Category::getType,category.getType());
+        //排序条件---按次序排序，一样的话则按修改时间排序
+        queryWrapper.orderByAsc(Category::getSort).orderByAsc(Category::getUpdateTime);
+
+        //处理完成后通过service层的功能将处理过的数据放入list
+        List<Category> list = categoryService.list(queryWrapper);
+        return R.success(list);
+    }
 }
