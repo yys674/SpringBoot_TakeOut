@@ -7,6 +7,7 @@ import com.bupt.TakeOut.common.R;
 import com.bupt.TakeOut.dto.DishDto;
 import com.bupt.TakeOut.entity.Category;
 import com.bupt.TakeOut.entity.Dish;
+import com.bupt.TakeOut.entity.DishFlavor;
 import com.bupt.TakeOut.service.impl.CategoryServiceImpl;
 import com.bupt.TakeOut.service.impl.DishFlavorServiceImpl;
 import com.bupt.TakeOut.service.impl.DishServiceImpl;
@@ -107,4 +108,68 @@ public class DishController {
         dishService.updateWithFlavor(dishDto);
         return R.success("菜品dish修改成功！");
     }
+
+    //启售停售
+    @PostMapping("/status/{status}")
+    public R<String> sale(@PathVariable int status,String[] ids){
+        for (String id:
+             ids) {
+            //只需要改status，因此没必要获取flavor
+            Dish dish = dishService.getById(id);
+            //修改status
+            dish.setStatus(status);
+            //将修改操作存入数据库
+            dishService.updateById(dish);
+        }
+        return R.success("修改成功！");
+    }
+
+    //删除操作
+    //没有把对应的flavor删除！！！
+    @DeleteMapping
+    public R<String> delete(String[] ids) {
+        for (String id:
+                ids) {
+            Dish dish = dishService.getById(id);
+            dishService.removeById(dish);
+//            dishFlavorService.removeById()
+        }
+        return R.success("删除成功！");
+    }
+
+/*    @DeleteMapping
+    public R<String> delete(String[] ids,@RequestBody DishDto dishDto) {
+        for (String id:
+                ids) {
+            dishService.removeWithFlavor(dishDto);
+//            dishService.removeById(dish);
+//            dishFlavorService.removeById()
+        }
+        return R.success("删除成功！");
+    }*/
+
+   /* @DeleteMapping
+//    public R<String> delete(String[] ids) {
+    public R<String> delete(String[] ids,DishDto dishDto) {
+        for (String id:
+             ids) {
+            Dish dish = dishService.getById(id);
+            //报错cannot be cast to.....  DishDto are in unnamed module of loader 'app')
+//            DishDto dishDto =(DishDto) dishService.getById(id);
+            List<DishFlavor> flavors = dishDto.getFlavors();
+            flavors = flavors.stream().map(
+                    (item)->{
+                        item.setDishId(dish.getId());
+                        return item;
+                    }
+            ).collect(Collectors.toList());
+            for (DishFlavor dishFlavor:
+                 flavors) {
+                dishFlavorService.removeById(dishFlavor.getId());
+            }
+            dishService.removeById(dish);
+        }
+        return R.success("删除成功！");
+    }*/
+
 }

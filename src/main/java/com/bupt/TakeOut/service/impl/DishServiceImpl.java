@@ -107,4 +107,29 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
 
     }
+
+    /*//删除dish的同时把flavor也删了
+    //报错400
+    @Override
+    public void removeWithFlavor(DishDto dishDto) {
+        //得到当前的dishId
+        Dish dish = this.getById(dishDto.getId());
+        Long dishId = dish.getId();
+
+        List<DishFlavor> flavors = dishDto.getFlavors();
+
+        //将口味和DishId一一对应
+        flavors = flavors.stream().map(
+                (item)->{
+                    item.setDishId(dishId);
+                    return item;
+                }
+        ).collect(Collectors.toList());
+
+        //删除各个flavor
+        for (DishFlavor flavor : flavors){
+            dishFlavorService.removeById(flavor.getId());
+        }
+
+    }*/
 }
