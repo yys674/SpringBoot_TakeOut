@@ -172,4 +172,20 @@ public class DishController {
         return R.success("删除成功！");
     }*/
 
+    @GetMapping("/list")
+    public R<List<Dish>> list(Dish dish){
+        //建立构造器
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        //查询启售状态，如果启售（状态位为1）则添加
+        queryWrapper.eq(Dish::getStatus,1);
+        //再筛选一遍，dish中和catergory对应的留下
+        queryWrapper.eq(dish.getCategoryId()!=null,Dish::getCategoryId,dish.getCategoryId());
+        //按照次序以及添加时间排序
+        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+
+        //将查询结果存入列表返回
+        List<Dish> list = dishService.list(queryWrapper);
+        return R.success(list);
+    }
+
 }
